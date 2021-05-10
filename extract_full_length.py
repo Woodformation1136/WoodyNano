@@ -6,15 +6,16 @@ from WoodyNano import seqtools
 
 parser = argparse.ArgumentParser(description='Arguments availible to WoodyNano')
 parser.add_argument('-l', metavar='len_cutoff', type=int,
-                    help='Reads length cutoff. Default = sum(ap_length)')
+        help='Reads length cutoff. (Default: sum(ap_length))')
 parser.add_argument('-q', metavar='q_cutoff', default=7, type=int,
-                    help='Reads qscore cutoff.')
+        help='Reads qscore cutoff. (Default: 7)')
 parser.add_argument('-e', metavar='error_rate_cutoff', default=0.3, type=float,
-                    help='Primer error rate cutoff.')
-parser.add_argument('-p', metavar='primer_fasta', help='Primer fasta.')
-parser.add_argument('--ap_length', nargs=2, metavar=("front", "end"), default=[130, 60], type=int,
-                    help='AP length, separated by space')
-parser.add_argument('--primer_cnfg', metavar='primer_cnfg', required=False, help='Primer configuration.')
+        help='Primer error rate cutoff. (Default: 0.3)')
+parser.add_argument('-p', metavar='primer_fasta', help='Primer fasta. (Not required)')
+parser.add_argument('--ap_length', nargs=2, metavar='', default=[130, 60], type=int,
+        help='AP length, separated by space (Default: 130 60)')
+parser.add_argument('--primer_cnfg', metavar='', required=False, 
+                    help='Primer configuration. (Not required)')
 parser.add_argument('input_fastq', metavar='input_fastq', help='Input fastq.')
 parser.add_argument('output_fastq', metavar='output_fastq',
                     help='Output fastq.')
