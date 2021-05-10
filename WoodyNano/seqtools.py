@@ -127,10 +127,3 @@ class SeqFastq:
                 o.write(read.seq+'\n')
                 o.write(read.info2+'\n')
                 o.write(read.qscore+'\n')
-
-
-# if '|' in info:
-#     tmp = re.split('=| |[|]|:|@', info)
-#     read.cutpoint = (int(tmp[1]), int(tmp[2]))
-#     read.strand = tmp[5]
-#     read.info = tmp[3]
