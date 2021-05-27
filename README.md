@@ -28,15 +28,11 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  
-  quality control:
-  -l len_cutoff         Reads length cutoff. (Default = sum(ap_length))
-  -q q_cutoff           Reads qscore cutoff. (Default = 7)
-  
-  primer alignment:
-  -e error_rate_cutoff  Primer error rate cutoff. (Default = 0.3)
+  -l len_cutoff         Reads length cutoff. (Default: sum(ap_length))
+  -q q_cutoff           Reads qscore cutoff. (Default: 7)
+  -e error_rate_cutoff  Primer error rate cutoff. (Default: 0.3)
   -p primer_fasta       Primer fasta. (Not required)
-  --ap_length           AP length, separated by space (Default = 130 60)
+  --ap_length           AP length, separated by space (Default: 130 60)
   --primer_cnfg         Primer configuration. (Not required)
 ```
 
