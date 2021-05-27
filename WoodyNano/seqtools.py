@@ -7,8 +7,8 @@ from math import log
 class SeqFasta:
     def __init__(
             self,
-            info=str,
-            seq=str
+            info=str(),
+            seq=str()
         ):
         self.info = info
         self.seq = seq
@@ -41,11 +41,13 @@ class SeqFasta:
 
 class SeqFastq:
     def __init__(self,
-                 info=str,
-                 seq=str,
-                 info2=str,
-                 qscore=str):
+                 info=str(),
+                 seq=str(),
+                 info2=str(),
+                 qscore=str()
+                 ):
         self.info = info
+        self.info2 = info2
         self.adprimer = {
             'fp': None,
             'rp': None,
@@ -58,7 +60,7 @@ class SeqFastq:
             'fp_rc': None,
             'rp_rc': None
         }
-        self.is_fusion = None
+        self.body_hit = None
         self.seq = seq
         self.qscore = qscore
         self.strand = None
@@ -70,9 +72,9 @@ class SeqFastq:
     def __repr__(self):
         return f"info: {self.info}\
                 \ncutpoint: {self.cutpoint}\
-                \nadaptor: {self.adaptorprimer}\
-                \nreadbody: {self.bodyprimer}\
-                \nis_fusion: {self.fusion}\
+                \nadaptor: {self.adprimer}\
+                \nreadbody: {self.bdprimer}\
+                \nbody_hit: {self.body_hit}\
                 \nstrand: {self.strand}\
                 \ncut_primer: {self.cut_primer}\
                 \ncut_ployA: {self.cut_ploy}\

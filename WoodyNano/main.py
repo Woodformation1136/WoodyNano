@@ -47,14 +47,74 @@ def primer_alignment(read, fp, rp, score, ap_length):
     return
 
 
-def is_fusion(read):
+def body_hit(read):
     try:
-        read.is_fusion = any([read.bdprimer[p]['editDistance'] !=
+        read.body_hit = any([read.bdprimer[p]['editDistance'] !=
                               99 for p in read.bdprimer.keys()])
     except TypeError:
         pass
 
     return
+
+
+def split_fusion(read, primer_cnfg):
+    def correct_primer(read, pname1, pname2):
+        correct = None
+        err1 = read.adprimer[pname1]['errorRate']
+        err2 = read.adprimer[pname2]['errorRate']
+
+        if err2 > err1:
+            correct = pname1
+        elif err1 > err2:
+            correct = pname2
+
+        return correct
+
+    correct_front = correct_primer(read, 'fp', 'rp')
+    correct_end = correct_primer(read, 'fp_rc', 'rp_rc')
+    
+    paired_primer = {
+        'fp':'rp_rc',
+        'rp':'fp_rc',
+        'fp_rc':'rp',
+        'rp_rc':'fp'
+    }
+    split_read1 = None
+    split_read2 = None
+
+    if correct_front:
+        if read.bdprimer[paired_primer[correct_front]]['editDistance'] != 99:
+            middle_primer1 = paired_primer[correct_front]
+            split_read1 = seqtools.SeqFastq()
+            
+            if correct_front == primer_cnfg['+'][0]:
+                split_read1.strand = '+'
+            
+            elif correct_front == primer_cnfg['-'][0]:
+                split_read1.strand = '-'
+
+            split_read1.info = read.info + '_1'
+            split_read1.seq, split_read1.qscore = read.seq, read.qscore
+            split_read1.adprimer[middle_primer1] = read.bdprimer[middle_primer1]
+            split_read1.adprimer[correct_front] = read.adprimer[correct_front]
+
+    if correct_end:
+        if read.bdprimer[paired_primer[correct_end]]['editDistance'] != 99:
+            middle_primer2 = paired_primer[correct_end]
+            split_read2 = seqtools.SeqFastq()
+
+            if correct_end == primer_cnfg['+'][1]:
+                split_read2.strand = '+'
+            
+            elif correct_end == primer_cnfg['-'][1]:
+                split_read2.strand = '-'
+
+            split_read2.info = read.info + '_2'
+            split_read2.seq, split_read2.qscore = read.seq, read.qscore
+            split_read2.adprimer[middle_primer2] = read.bdprimer[middle_primer2]
+            split_read2.adprimer[correct_end] = read.adprimer[correct_end]
+
+    return [split_read1, split_read2]
 
 def is_full_length(read, primer_cnfg):
     
@@ -70,15 +130,15 @@ def is_full_length(read, primer_cnfg):
         
         return correct    
 
-    if not read.is_fusion:
+    if not read.body_hit:
         correct_front = correct_primer(read, 'fp', 'rp')
         correct_end = correct_primer(read, 'fp_rc', 'rp_rc')
         
         if correct_front and correct_end:
-            if [correct_front, correct_end] == ['fp', 'rp_rc']:
+            if [correct_front, correct_end] == primer_cnfg['-']:
                 read.strand = '-'
 
-            elif [correct_front, correct_end] == ['rp', 'fp_rc']:
+            elif [correct_front, correct_end] == primer_cnfg['+']:
                 read.strand = '+'
 
     return
@@ -86,19 +146,18 @@ def is_full_length(read, primer_cnfg):
 
 def generate_cutpoint(read):
     # cut 'GGG'/'CCC' at rp and rp_rc
-    if not read.is_fusion:
-        if read.strand:
-            if read.strand == '-':
-                read.cutpoint = (
-                    read.adprimer['fp']['locations'][-1][-1],
-                    read.adprimer['rp_rc']['locations'][0][0]-4
-                )
-            
-            if read.strand == '+':
-                read.cutpoint = (
-                    read.adprimer['rp']['locations'][-1][-1]+5,
-                    read.adprimer['fp_rc']['locations'][0][0]
-                )
+    if read.strand:
+        if read.strand == '-':
+            read.cutpoint = (
+                read.adprimer['fp']['locations'][-1][-1],
+                read.adprimer['rp_rc']['locations'][0][0]-4
+            )
+        
+        if read.strand == '+':
+            read.cutpoint = (
+                read.adprimer['rp']['locations'][-1][-1]+5,
+                read.adprimer['fp_rc']['locations'][0][0]
+            )
     return
 
 
@@ -150,6 +209,4 @@ def cut_ployA(read):
                 read.info = '@%s:%s|%s strand=%s' % (
                     read.cutpoint[0], read.cutpoint[1], read.info, read.strand)
     return
-
-
 
