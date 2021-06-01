@@ -31,16 +31,16 @@ def print_to_stderr(*a):
     print(*a, file=sys.stderr)
 
 def classifier(
-        input_dir,
-        output_dir,
-        fp, rp,
-        len_cutoff,
-        q_cutoff,
-        ap_length,
-        error_cutoff,
-        primer_cnfg,
-        out_fusion
-    ):
+    input_dir,
+    output_dir,
+    fp, rp,
+    len_cutoff,
+    q_cutoff,
+    ap_length,
+    error_cutoff,
+    primer_cnfg,
+    out_fusion
+):
 
     # report start time and variables
     now = datetime.now()
@@ -58,95 +58,116 @@ def classifier(
     print_to_stdout(f'--primer configuration: {primer_cnfg}')
     print_to_stdout(f'--fusion read fastq: {out_fusion}\n')
 
+    stats = {
+        'InputReads': 0,
+        'LengthFailed': 0,
+        'QscoreFailed': 0,
+        'PassedQC': 0,
+        'FullLengthReads': 0,
+        'BodyHits': 0,
+        'FusionReads': 0
+    }
 
-    if out_fusion:
-        splitted_reads = dict()
-    
-    # read fastq
-    raw_fastq = seqtools.SeqFastq.Import(fname=input_dir)
-    
-    # record read names
-    ttl_reads = list(raw_fastq.keys())
+    output = open(output_dir, 'w')
+    output = open(output_dir, 'a')
 
-    print_to_stdout(f"{len(ttl_reads)} raw reads.")
+    fusion = open(out_fusion, 'w')
+    fusion = open(out_fusion, 'a')
 
-    # qc
-    for rname in ttl_reads:
-        read = raw_fastq[rname]
-        if len_cutoff > 0:
-            if len(read.seq) <= len_cutoff:
-                raw_fastq.pop(rname)
+    with open(input_dir, 'r') as f:
+        read = seqtools.SeqFastq.read(f)
+        while read:
+            stats['InputReads'] += 1
+            short = False
+            low_quality = False
+
+            # check length
+            if len(read.seq) < len_cutoff:
+                stats['LengthFailed'] += 1
+                short = True
+
+            # check qscore
+            if read.mean_q() < q_cutoff:
+                stats['QscoreFailed'] += 1
+                low_quality = True
+
+            # if short or low_quality
+            if short or low_quality:
+                # get next read
+                read = seqtools.SeqFastq.read(f)
+                continue
+
+            stats['PassedQC'] += 1
+
+            # align primers, check bodyprimers
+            main.primer_alignment(
+                read=read,
+                fp=fp,
+                rp=rp,
+                score=error_cutoff,
+                ap_length=ap_length
+            )
+            main.body_hit(read)
+
+            # body_hit == True
+            if read.body_hit:
+                stats['BodyHits'] += 1
+
+                # if output fusion reads
+                if out_fusion:
+                    # split read into read1, read2
+                    split_read1, split_read2 = main.split_fusion(
+                        read=read,
+                        primer_cnfg=primer_cnfg
+                    )
+
+                    # for new_read in read1, read2
+                    for new_read in split_read1, split_read2:
+
+                        # if new_read exist, new_read must be full-length
+                        if new_read:
+                            # trimm new_read, orient new_readmain.generate_cutpoint(split_read)
+                            main.cut_primer(new_read)
+                            main.read_orientation(new_read, direction='+')
+                            main.cut_ployA(new_read)
+
+                            # output, make sure trimming were done
+                            if new_read.cut_ploy:
+                                stats['FusionReads'] += 1
+                                new_read.write(fusion)
+
+            # body_hit == False
             else:
-                if q_cutoff > 0:
-                    if read.mean_q() < q_cutoff:
-                        raw_fastq.pop(rname)
+                # check if read is full-length
+                main.is_full_length(read, primer_cnfg)
 
-    print_to_stdout(f"{raw_fastq.__len__()} reads passed QC")
+                # if read is full-length
+                if read.strand:
+                    # trim read, orient read
+                    main.generate_cutpoint(read)
+                    main.cut_primer(read)
+                    main.read_orientation(read, direction='+')
+                    main.cut_ployA(read)
 
-    qc_passed_reads = list(raw_fastq.keys())
+                    # output, make sure trimming were done
+                    if read.cut_ploy:
+                        stats['FullLengthReads'] += 1
+                        read.write(output)
+
+            # get the next read
+            read = seqtools.SeqFastq.read(f)
+
+    output.close()
+    fusion.close()
     
-    
-    body_primer = 0
-    for rname in qc_passed_reads:
-        read = raw_fastq[rname]
-        # align primer
-        main.primer_alignment(
-            read=read,
-            fp=fp,
-            rp=rp,
-            score=error_cutoff,
-            ap_length=ap_length
-        )
-        
-        # check if body primers exists
-        main.body_hit(read)
-        if read.body_hit:
-            body_primer += 1
-            # if output were required
-            if out_fusion:
-                split_read1, split_read2 = main.split_fusion(read, primer_cnfg)
-                for split_read in split_read1, split_read2:
-                    if split_read:
-                        main.generate_cutpoint(split_read)
-                        main.cut_primer(split_read)
-                        main.read_orientation(split_read, direction='+')
-                        main.cut_ployA(split_read)
-                        
-                        if split_read.cut_ploy:
-                            splitted_reads[split_read.info] = split_read
+    print_to_stdout(f"InputReads: {stats['InputReads']}")
+    print_to_stdout(f"LengthFailed: {stats['LengthFailed']}")
+    print_to_stdout(f"QscoreFailed: {stats['QscoreFailed']}")
+    print_to_stdout(f"PassedQC: {stats['PassedQC']}")
+    print_to_stdout(f"FullLengthReads: {stats['FullLengthReads']}")
+    print_to_stdout(f"BodyHits: {stats['BodyHits']}")
+    print_to_stdout(f"FusionReads: {stats['FusionReads']}")
 
-            raw_fastq.pop(rname)
-        
-        else:
-            main.is_full_length(read, primer_cnfg)
-            main.generate_cutpoint(read)
-            main.cut_primer(read)
-            main.read_orientation(read,direction='+')
-            main.cut_ployA(read)
-            
-            if not read.cut_ploy:
-                raw_fastq.pop(rname)
-        
-        # end of for-loop
-
-    if out_fusion:
-        print_to_stdout(f"{splitted_reads.__len__()} reads were generated from splitting fusion reads.")
-    
-    print_to_stdout(f"{body_primer} reads have body pimers.")
-    print_to_stdout(f"{raw_fastq.__len__()} full-length reads.")
-
-    # export full-length fastq
-    seqtools.SeqFastq.Export(
-        fastq_dict=raw_fastq,
-        fname=output_dir
-        )
-    
-    # export splitted fusion reads fastq
-    if out_fusion:
-        seqtools.SeqFastq.Export(
-            fastq_dict=splitted_reads,
-            fname=out_fusion
-        )
 
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
@@ -154,6 +175,7 @@ def classifier(
 
     return
 
+# get arguments
 if args.p:
     primer_fasta = main.read_primer_fasta(fasta_fname=args.p)
     primers = {

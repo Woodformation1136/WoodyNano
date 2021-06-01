@@ -85,7 +85,12 @@ def split_fusion(read, primer_cnfg):
     if correct_front:
         if read.bdprimer[paired_primer[correct_front]]['editDistance'] != 99:
             middle_primer1 = paired_primer[correct_front]
-            split_read1 = seqtools.SeqFastq()
+            split_read1 = seqtools.SeqFastq(
+                info=read.info + '_1',
+                seq=read.seq,
+                info2=read.info2,
+                qscore=read.qscore
+            )
             
             if correct_front == primer_cnfg['+'][0]:
                 split_read1.strand = '+'
@@ -93,15 +98,18 @@ def split_fusion(read, primer_cnfg):
             elif correct_front == primer_cnfg['-'][0]:
                 split_read1.strand = '-'
 
-            split_read1.info = read.info + '_1'
-            split_read1.seq, split_read1.qscore = read.seq, read.qscore
             split_read1.adprimer[middle_primer1] = read.bdprimer[middle_primer1]
             split_read1.adprimer[correct_front] = read.adprimer[correct_front]
 
     if correct_end:
         if read.bdprimer[paired_primer[correct_end]]['editDistance'] != 99:
             middle_primer2 = paired_primer[correct_end]
-            split_read2 = seqtools.SeqFastq()
+            split_read2 = seqtools.SeqFastq(
+                info=read.info + '_2',
+                seq=read.seq,
+                info2=read.info2,
+                qscore=read.qscore
+            )
 
             if correct_end == primer_cnfg['+'][1]:
                 split_read2.strand = '+'
@@ -109,8 +117,6 @@ def split_fusion(read, primer_cnfg):
             elif correct_end == primer_cnfg['-'][1]:
                 split_read2.strand = '-'
 
-            split_read2.info = read.info + '_2'
-            split_read2.seq, split_read2.qscore = read.seq, read.qscore
             split_read2.adprimer[middle_primer2] = read.bdprimer[middle_primer2]
             split_read2.adprimer[correct_end] = read.adprimer[correct_end]
 
