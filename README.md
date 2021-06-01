@@ -12,12 +12,20 @@ WoodyNano is a tool for extracting clean reads (trimmed, oriented, full-length r
 python extract_full_length.py [input_fastq] [output_fastq]
 ```
 
+
+## Split fusion reads
+
+```
+python extract_full_length.py --fusion_read split_reads.fastq [input_fastq] [output_fastq]
+```
+
+
 ## Full usage
 
 ```
 usage: extract_full_length.py [-h] [-l len_cutoff] [-q q_cutoff]
                               [-e error_rate_cutoff] [-p primer_fasta]
-                              [--ap_length ] [--primer_cnfg]
+                              [--ap_length ] [--primer_cnfg] [--fusion_read]
                               input_fastq output_fastq
 
 Arguments availible to WoodyNano
@@ -34,5 +42,6 @@ optional arguments:
   -p primer_fasta       Primer fasta. (Not required)
   --ap_length           AP length, separated by space (Default: 130 60)
   --primer_cnfg         Primer configuration. (Not required)
+  --fusion_read         Write splitted fusion reads to this file. (Not required)
 ```
 
