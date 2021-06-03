@@ -17,7 +17,7 @@ parser.add_argument('--ap_length', nargs=2, metavar='', default=[130, 60], type=
 parser.add_argument('--primer_cnfg', metavar='', required=False, 
                     help='Primer configuration. (Not required)')
 parser.add_argument('--min_length', metavar='', default=150, type=int,
-        help='Minimal output read length. (Default: 1)')
+        help='Minimal output read length. (Default: 150)')
 parser.add_argument('--fusion_read', metavar='', required=False,
                     help='Write splitted fusion reads to this file.')
 parser.add_argument('input_fastq', metavar='input_fastq', help='Input fastq.')
