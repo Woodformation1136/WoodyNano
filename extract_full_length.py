@@ -59,6 +59,7 @@ def classifier(
     print_to_stdout(f'--adaptor region: 1:{ap_length[0]}, -{ap_length[1]}:end')
     print_to_stdout(f'--primer error rate cutoff: {error_cutoff}')
     print_to_stdout(f'--primer configuration: {primer_cnfg}')
+    print_to_stdout(f'--minimal output read length: {min_length}')
     print_to_stdout(f'--fusion read fastq: {out_fusion}\n')
 
     stats = {
@@ -109,7 +110,8 @@ def classifier(
                 fp=fp,
                 rp=rp,
                 score=error_cutoff,
-                ap_length=ap_length
+                ap_length=ap_length,
+                len_cutoff=len_cutoff
             )
             main.body_hit(read)
 
@@ -124,13 +126,13 @@ def classifier(
                         read=read,
                         primer_cnfg=primer_cnfg
                     )
-
                     # for new_read in read1, read2
                     for new_read in split_read1, split_read2:
 
                         # if new_read exist, new_read must be full-length
                         if new_read:
                             # trimm new_read, orient new_readmain.generate_cutpoint(split_read)
+                            main.generate_cutpoint(new_read)
                             main.cut_primer(new_read)
                             main.read_orientation(new_read, direction='+')
                             main.cut_ployA(new_read)

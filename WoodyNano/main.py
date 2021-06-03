@@ -11,7 +11,7 @@ def read_primer_fasta(fasta_fname):
         return
 
 
-def primer_alignment(read, fp, rp, score, ap_length):
+def primer_alignment(read, fp, rp, score, ap_length, len_cutoff):
 
     primers = {
         'fp':fp,
@@ -35,25 +35,26 @@ def primer_alignment(read, fp, rp, score, ap_length):
                 map_start=ap_region[0],
                 map_end=ap_region[1]
             )
-            # map to read body
-            read.bdprimer[p] = utils.aligner(
-                primer=primers[p],
-                sequence=read.seq,
-                score=score,
-                map_start=ap_length[0],
-                map_end=(len(read.seq) - ap_length[1])
-            )
+            # if read legnth > len_cutoff*2
+            if len(read.seq) > len_cutoff*2:
+                # map to read body
+                read.bdprimer[p] = utils.aligner(
+                    primer=primers[p],
+                    sequence=read.seq,
+                    score=score,
+                    map_start=ap_length[0],
+                    map_end=(len(read.seq) - ap_length[1])
+                )
     
     return
 
 
 def body_hit(read):
-    try:
+    # if body primer mapping results exist
+    if read.bdprimer['fp']:
         read.body_hit = any([read.bdprimer[p]['editDistance'] !=
-                              99 for p in read.bdprimer.keys()])
-    except TypeError:
-        pass
-
+                            99 for p in read.bdprimer.keys()])
+        
     return
 
 
