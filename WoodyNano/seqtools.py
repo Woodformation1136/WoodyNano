@@ -101,7 +101,7 @@ class SeqFastq:
 
             else:
                 return SeqFastq(
-                    info=buffer[0],
+                    info=buffer[0][1:],
                     seq=buffer[1],
                     info2=buffer[2],
                     qscore=buffer[3]
