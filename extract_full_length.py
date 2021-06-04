@@ -181,7 +181,7 @@ def classifier(
 
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
-    print_to_stdout(f'Finished...\nCurrent time: {current_time}')
+    print_to_stdout(f'Finished...\nCurrent time: {current_time}\n')
 
     return
 
