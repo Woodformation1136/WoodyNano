@@ -11,7 +11,7 @@ def read_primer_fasta(fasta_fname):
         return
 
 
-def primer_alignment(read, fp, rp, score, ap_length, len_cutoff):
+def primer_alignment(read, fp, rp, score, ap_length):
 
     primers = {
         'fp':fp,
@@ -35,8 +35,8 @@ def primer_alignment(read, fp, rp, score, ap_length, len_cutoff):
                 map_start=ap_region[0],
                 map_end=ap_region[1]
             )
-            # if read legnth > len_cutoff*2
-            if len(read.seq) > len_cutoff*2:
+            # if read body > 0 bp
+            if len(read.seq) > sum(ap_length):
                 # map to read body
                 read.bdprimer[p] = utils.aligner(
                     primer=primers[p],

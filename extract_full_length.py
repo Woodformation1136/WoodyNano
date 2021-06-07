@@ -6,7 +6,7 @@ from WoodyNano import seqtools
 
 parser = argparse.ArgumentParser(description='Arguments availible to WoodyNano')
 parser.add_argument('-l', metavar='len_cutoff', type=int,
-        help='Reads length cutoff. (Default: sum(ap_length))')
+        help='Reads length cutoff. (Default: max{sum(ap_length), len_cutoff})')
 parser.add_argument('-q', metavar='q_cutoff', default=7, type=int,
         help='Reads qscore cutoff. (Default: 7)')
 parser.add_argument('-e', metavar='error_rate_cutoff', default=0.3, type=float,
@@ -16,8 +16,8 @@ parser.add_argument('--ap_length', nargs=2, metavar='', default=[130, 60], type=
         help='AP length, separated by space (Default: 130 60)')
 parser.add_argument('--primer_cnfg', metavar='', required=False, 
                     help='Primer configuration. (Not required)')
-parser.add_argument('--min_length', metavar='', default=150, type=int,
-        help='Minimal output read length. (Default: 150)')
+parser.add_argument('--min_length', metavar='', default=1, type=int,
+        help='Minimal output read length. (Default: 1)')
 parser.add_argument('--fusion_read', metavar='', required=False,
                     help='Write splitted fusion reads to this file.')
 parser.add_argument('input_fastq', metavar='input_fastq', help='Input fastq.')
@@ -110,8 +110,7 @@ def classifier(
                 fp=fp,
                 rp=rp,
                 score=error_cutoff,
-                ap_length=ap_length,
-                len_cutoff=len_cutoff
+                ap_length=ap_length
             )
             main.body_hit(read)
 
@@ -198,10 +197,7 @@ else:
         'rp':'AAGTTGTCGGTGTCTTTGTGTTTCTGTTGGTGCTGATATTGC'
     }
 
-if not args.l:
-    len_cutoff = sum(args.ap_length)
-else:
-    len_cutoff = args.l
+len_cutoff = max(sum(args.ap_length),args.l)
 
 if not args.primer_cnfg:
     primer_cnfg = {
