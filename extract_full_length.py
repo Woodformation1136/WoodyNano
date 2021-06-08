@@ -130,7 +130,7 @@ def classifier(
 
                         # if new_read exist, new_read must be full-length
                         if new_read:
-                            # trimm new_read, orient new_readmain.generate_cutpoint(split_read)
+                            # trimm new_read, orient new_read
                             main.generate_cutpoint(new_read)
                             main.cut_primer(new_read)
                             main.read_orientation(new_read, direction='+')
