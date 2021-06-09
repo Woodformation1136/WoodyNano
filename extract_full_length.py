@@ -197,7 +197,10 @@ else:
         'rp':'AAGTTGTCGGTGTCTTTGTGTTTCTGTTGGTGCTGATATTGC'
     }
 
-len_cutoff = max(sum(args.ap_length),args.l)
+if args.l:
+    len_cutoff = max(sum(args.ap_length),args.l)
+else:
+    len_cutoff = sum(args.ap_length)
 
 if not args.primer_cnfg:
     primer_cnfg = {
